@@ -1,35 +1,32 @@
 #include <Arduino.h>
-#include <Servo.h>
 
-Servo servo;
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
-String inString = "";
+#define SENSOR_PIN  17 // ESP32 pin GPIO17 connected to DS18B20 sensor's DATA pin
 
-void setup(){
-  Serial.begin(9600);
-  servo.attach(12);
-  Serial.print("mmmmm: ");
+OneWire oneWire(SENSOR_PIN);
+DallasTemperature DS18B20(&oneWire);
+
+float tempC; // temperature in Celsius
+float tempF; // temperature in Fahrenheit
+
+void setup() {
+  Serial.begin(9600); // initialize serial
+  DS18B20.begin();    // initialize the DS18B20 sensor
 }
 
-void loop(){
-  Serial.print("mmmmm: ");
-  while(Serial.available() > 0){
-    int inChar = Serial.read();
-    if(isDigit(inChar)){
-      inString += (char)inChar;
-    }
-  
+void loop() {
+  DS18B20.requestTemperatures();       // send the command to get temperatures
+  tempC = DS18B20.getTempCByIndex(0);  // read temperature in °C
+  tempF = tempC * 9 / 5 + 32; // convert °C to °F
 
-    if(inChar == '\n'){
-      Serial.print("Value: ");
-      Serial.println(inString.toInt());
+  Serial.print("Temperature: ");
+  Serial.print(tempC);    // print the temperature in °C
+  Serial.print("°C");
+  Serial.print("  ~  ");  // separator between °C and °F
+  Serial.print(tempF);    // print the temperature in °F
+  Serial.println("°F");
 
-      int value = inString.toInt();
-
-      
-      servo.write(value);
-
-      inString = "";
-    }
-  }
+  delay(500);
 }
